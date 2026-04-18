@@ -7,6 +7,7 @@ A two-stage segmentation pipeline for lung nodules in CT images, combining a
 > via an optimized active contour model"*, Medical Physics, 2024.
 > DOI: [10.1002/mp.16933](https://doi.org/10.1002/mp.16933)
 
+
 ---
 
 ## Overview
@@ -16,7 +17,7 @@ A two-stage segmentation pipeline for lung nodules in CT images, combining a
 | 1 | 2.5-D U-Net | Coarse binary segmentation from multi-slice CT context |
 | 2 | OACM | Energy-minimisation refinement driven by Stage 1 output |
 
-The OACM energy functional (Eq. 2 of the paper):
+The OACM energy functional:
 
 $$E(u, c_1, c_2) = \lambda \int_\Omega \left[(I-c_1)^2 u + (I-c_2)^2(1-u)\right]dx + \sqrt{\frac{\pi}{\tau}} \int_\Omega u\, G_\tau*(1-u)\,dx + \int_\Omega \beta(I)|\nabla^2 u|\,dx$$
 
@@ -85,26 +86,14 @@ data/lidc_dataset/
 Each `*_ct.npy` is a single 2-D CT slice saved as a NumPy array (H × W, any
 numeric dtype). The matching `*_mask.npy` is its binary segmentation mask.
 
-### CT Normalisation
-
-Images are normalised with:
-
-```
-I_norm = (I - I_min) / (I_max - I_min)
-```
-
-Window centre / width settings in `config.py` (`wc = -450`, `ww = 1000`) follow
-the protocol in Yang et al. 2024, Section 3.1.1.
 
 ### Training Split (Paper Protocol)
 
 | Dataset | Train | Test |
 |---------|-------|------|
-| LIDC-IDRI | 20 patients | 50 patients |
-| Guangdong Hospital | 10 patients | 50 patients |
-| Yunnan Cancer Hospital | 5 patients | 50 patients |
-
+| LIDC-IDRI | 80 patients | 20 patients |
 ---
+*Owing to the few-shot learning paradigm, the study is restricted to a maximum of 100 patients.
 
 ## Installation
 
@@ -169,7 +158,7 @@ variants. Figures are saved to `checkpoints/`.
 | Parameter | Default | Description |
 |-----------|---------|-------------|
 | `batch_size` | `16` | Training batch size |
-| `epochs` | `18` | Training epochs |
+| `epochs` | `40` | Training epochs |
 | `lr` | `3e-4` | Initial learning rate (AdamW) |
 | `weight_decay` | `1e-4` | L2 regularisation |
 | `grad_clip` | `1.0` | Gradient norm clip |
@@ -250,21 +239,22 @@ L = w_bce · L_BCE  +  w_dice · L_Dice  +  w_focal · L_Focal
 |--------|--------|-------|-----|
 | Dice coefficient | DSC | [0, 1] | ↑ |
 | Jaccard / IoU | JS | [0, 1] | ↑ |
-| Sensitivity | Sen | [0, 1] | ↑ |
-| Specificity | Spe | [0, 1] | ↑ |
 | Cohen's κ | κ | [-1, 1] | ↑ |
 | Hausdorff distance | HD | [0, ∞) | ↓ |
 
 ---
 
-## Results (LIDC-IDRI, Table 1 of Yang et al. 2024)
 
-| Method | Dice | JS | SA | κ | HD |
-|--------|------|----|----|---|----|
-| U-Net (Stage 1) | 0.8336 | 0.7486 | 0.9953 | 0.8434 | 26.89 |
-| OACM | 0.8736 | 0.7614 | 0.9975 | 0.8634 | 9.61 |
-| **FSSF (Stage 2)** | **0.9003** | **0.8165** | **0.9989** | **0.8962** | **6.31** |
+### Quantitative Evaluation: Stage 1 (U-Net) vs Soft-Masking vs Hard-Masking
 
+| Metric     | Stage 1 (U-Net) | Soft-Masking | Hard-Masking | Soft vs Stage1 | Hard vs Stage1 |
+|------------|-----------------|--------------|--------------|----------------|----------------|
+| Dice       | 0.6498          | 0.7366       | 0.7328       | +13.36% ↑      | +12.77% ↑      |
+| Jaccard    | 0.5691          | 0.6387       | 0.6308       | +12.22% ↑      | +10.84% ↑      |
+| Kappa      | 0.6495          | 0.7362       | 0.7324       | +13.35% ↑      | +12.77% ↑      |
+| Hausdorff  | 53.9123         | 28.0149      | 31.4648      | −48.04% ↓*     | −41.64% ↓*     |
+
+* Lower is better for Hausdorff distance.
 ---
 
 ## Outputs
@@ -289,8 +279,6 @@ accepts both full checkpoint dicts (with optimiser state) and bare state dicts.
 ---
 
 ## Limitations
-
-As noted in the paper (Section 5):
 
 1. The U-Net backbone is a relatively simple architecture; deeper or
    attention-based encoders may extract richer features.
