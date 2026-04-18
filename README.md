@@ -7,6 +7,28 @@ A two-stage segmentation pipeline for lung nodules in CT images, combining a
 > via an optimized active contour model"*, Medical Physics, 2024.
 > DOI: [10.1002/mp.16933](https://doi.org/10.1002/mp.16933)
 
+## 👥 Contributors
+
+<table>
+  <tr>
+    <td align="center">
+      <a href="https://github.com/SaudQ19">
+        <img src="https://github.com/SaudQ19.png" width="100px;" alt="Samarth Aggarwal"/>
+        <br />
+        <sub><b>Saud Quadri</b></sub>
+      </a>
+    </td>
+    <td align="center">
+      <a href="https://github.com/alpinecoffee02">
+        <img src="https://github.com/alpinecoffee02.png" width="100px;" alt="Shivam Shaligram"/>
+        <br />
+        <sub><b>Shivam Shaligram</b></sub>
+      </a>
+    </td>
+  </tr>
+</table>
+
+
 
 ---
 
